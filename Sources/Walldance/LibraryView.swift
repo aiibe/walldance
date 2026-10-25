@@ -14,19 +14,27 @@ struct LibraryView: View {
 
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    if !model.isLoading && model.videos.isEmpty {
+                    if !model.isLoading && model.videos.isEmpty && model.pendingVideos.isEmpty {
                         emptyState
                             .transition(.opacity)
                     }
                     ForEach(model.videos) { video in
                         VideoCard(video: video, url: model.repository.url(for: video),
-                                  playingID: $model.playingID, selectedID: $model.selectedID) {
-                            model.remove(video)
-                        }
+                            playingID: $model.playingID, selectedID: model.selectedID,
+                            isCheckingRegistration: model.checkingIDs.contains(video.id),
+                            registrationFailed: model.registrationErrors[video.id] != nil,
+                            isApplying: model.applyingID == video.id, selectionEnabled: model.applyingID == nil,
+                            select: { model.select(video) }, retryRegistration: { model.retryRegistration(video) },
+                            remove: { model.remove(video) })
                         .transition(.asymmetric(
                             insertion: .opacity,
                             removal: .opacity.combined(with: .scale(scale: 0.96))
                         ))
+                    }
+                    ForEach(model.pendingVideos) { pending in
+                        PreparingVideoCard(name: pending.name, progress: pending.progress) {
+                            model.cancelImport(pending.id)
+                        }
                     }
                 }
                 .animation(reduceMotion ? nil : .smooth(duration: 0.32), value: model.videos.map(\.id))
@@ -58,13 +66,7 @@ struct LibraryView: View {
         .contentShape(Rectangle())
         .toolbarBackground(.hidden, for: .windowToolbar)
         .toolbar {
-            if #available(macOS 26.0, *) {
-                ToolbarSpacer(.flexible, placement: .primaryAction)
-            } else {
-                ToolbarItem(placement: .primaryAction) {
-                    Spacer()
-                }
-            }
+            ToolbarSpacer(.flexible, placement: .primaryAction)
             ToolbarItem(placement: .primaryAction) {
                 Button(action: model.chooseVideos) {
                     Label("Add Videos", systemImage: "plus")
@@ -98,8 +100,9 @@ struct LibraryView: View {
         .task { await model.load() }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { model.playingID = nil }
+            else { Task { await model.refreshSelection() } }
         }
-        .alert("Couldn’t add or update a video", isPresented: Binding(
+        .alert("Couldn’t update Walldance", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {
@@ -156,12 +159,7 @@ struct LibraryView: View {
 /// A single stationary glass surface behind the native traffic lights and toolbar.
 private struct GlassHeader: View {
     var body: some View {
-        if #available(macOS 26.0, *) {
-            Color.clear
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        } else {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.ultraThinMaterial)
-        }
+        Color.clear
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

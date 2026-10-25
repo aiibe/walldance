@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Walldance",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS("26.0")],
     products: [.executable(name: "Walldance", targets: ["Walldance"])],
     targets: [
         .target(name: "WalldanceCore"),

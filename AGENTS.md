@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Walldance is a native macOS video shelf using SwiftUI and AVKit, with no external dependencies.
+Walldance is a native macOS video wallpaper shelf using SwiftUI and AVKit, with no external dependencies.
 
 - `Package.swift` defines the executable, core library, and test target.
 - `Sources/Walldance/` contains the app entry point, views, playback, and `LibraryModel`.
@@ -16,7 +16,7 @@ The installer shows only Walldance and the Applications shortcut. Keep the artwo
 
 ## Build, Test, and Development Commands
 
-Use macOS with Swift 6 and an SDK supporting the macOS 26 APIs referenced by the UI. The deployment target is macOS 14; preserve availability guards and fallbacks.
+Use macOS 26 or later with Swift 6 and an SDK supporting the macOS 26 APIs referenced by the UI. The deployment target is macOS 26.
 
 - `swift build` — compile the package for development.
 - `swift run Walldance` — build and launch locally.
@@ -48,4 +48,4 @@ Keep `README.md` and `CHANGELOG.md` concise and easy to read. The README should 
 
 ## Data Safety
 
-Imported copies and `library.json` live in `~/Library/Application Support/Walldance/Videos`. Preserve original files, atomic manifest writes, and corrupt-manifest protection. Use temporary libraries for automated tests.
+`library.json` lives in `~/Library/Application Support/Walldance/Videos` and owns all shelf records. Each record requires prepared wallpaper metadata. The single prepared video and its thumbnail live in the per-user `com.apple.wallpaper/aerials` directory, shared with macOS. Preserve original files, atomic manifest writes, catalogue backups, and corrupt-manifest protection. Use temporary libraries and wallpaper catalogues for automated tests.
