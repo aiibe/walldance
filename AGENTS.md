@@ -21,6 +21,7 @@ Use macOS with Swift 6 and an SDK supporting the macOS 26 APIs referenced by the
 - `swift test` — run all library tests.
 - `swift test --filter VideoLibraryTests` — run the library suite explicitly.
 - `zsh scripts/build-app.sh` — create a release app bundle with ad hoc code signing.
+- `zsh scripts/build-dmg.sh` — build the app and package a drag-to-Applications installer.
 - `open dist/Walldance.app` — launch the packaged app.
 
 After app or asset changes, rebuild `dist/Walldance.app` with `zsh scripts/build-app.sh` before handing off.
@@ -37,7 +38,11 @@ Use Swift Testing (`@Test`, `#expect`, `#require`), with descriptive behavior-ba
 
 ## Commit & Pull Request Guidelines
 
-There are no commits yet, so no established message convention exists. Use concise imperative subjects, such as `Fix duplicate video imports`. Describe behavior changes, link relevant issues, and report validation in pull requests. Include screenshots for visible UI changes.
+Use concise imperative commit subjects, such as `Fix duplicate video imports`. Describe behavior changes, link relevant issues, and report validation in pull requests. Include screenshots for visible UI changes.
+
+## Documentation
+
+Keep `README.md` and `CHANGELOG.md` concise and easy to read. The README should cover what the app does, requirements, installation, and basic use in plain language. Leave out implementation details, build commands, signing, notarization, and CI setup. Keep changelog entries to a few short bullets about user-visible changes per version; avoid technical details and development history. Update the changelog for user-visible releases. Use `## 1.2.3` version headings: tag releases create a draft with that section as the GitHub release description and attach the notarized DMG. Keep releases as drafts for user review unless explicitly asked to publish.
 
 ## Data Safety
 

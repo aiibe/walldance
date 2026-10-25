@@ -1,20 +1,16 @@
 # Walldance
 
-A small, native macOS video shelf built with SwiftUI and AVKit. Drop videos into the window, or use **+** / **⌘O**. Hover over a card to play its video; move the pointer away to pause. Videos loop silently, with one playing at a time. Right-click a card to remove it.
+A simple video shelf for macOS. Keep your favorite clips together and preview them with a hover.
 
-Imported videos are copied into `~/Library/Application Support/Walldance/Videos`, so moving the original won’t break your library. Removing a video deletes its imported copy, leaving the original untouched. Playback pauses when the app becomes inactive.
+Requires **macOS 14 or later**.
 
-Runs on macOS 14 or later. Building requires Swift 6 and Xcode 26 or later for the macOS 26 SDK. No dependencies.
+Open the Walldance DMG, drag **Walldance.app** to **Applications**, then eject the disk image.
 
-```sh
-swift run Walldance
-```
+- Drop videos into the window, or add them with **+** / **⌘O**.
+- Hover over a video to play it. Move away to pause.
+- Videos loop silently, with one playing at a time.
+- Right-click a video to remove it from your shelf.
 
-To build a standalone app:
+Walldance keeps its own copies, so your original files stay untouched. Playback pauses when you switch to another app.
 
-```sh
-zsh scripts/build-app.sh
-open dist/Walldance.app
-```
-
-Run library tests with `swift test`. Open `Package.swift` in Xcode to develop the app.
+See [what’s new](CHANGELOG.md).

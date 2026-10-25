@@ -1,4 +1,4 @@
-name: Notarize app
+name: Build notarized DMG
 
 on:
   push:
@@ -47,6 +47,9 @@ jobs:
           fi
           echo "APP_VERSION=$version" >> "$GITHUB_ENV"
           echo "APP_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+
+      - name: Validate release notes
+        run: bash scripts/release-notes.sh "$APP_VERSION" > /dev/null
 
       - name: Run tests
         run: |
@@ -103,14 +106,17 @@ jobs:
           UNIVERSAL_BUILD: '1'
         run: zsh scripts/build-app.sh
 
-      - name: Notarize and staple app
-        run: zsh scripts/notarize-app.sh
+      - name: Build signed DMG
+        run: zsh scripts/build-dmg.sh --skip-build
 
-      - name: Upload notarized app
+      - name: Notarize and staple DMG
+        run: zsh scripts/notarize-app.sh "dist/Walldance-$APP_VERSION.dmg"
+
+      - name: Upload notarized DMG
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Walldance-${{ env.APP_VERSION }}-universal
-          path: dist/Walldance.zip
+          path: dist/Walldance-${{ env.APP_VERSION }}.dmg
           if-no-files-found: error
           compression-level: 0
 
@@ -129,3 +135,43 @@ jobs:
             security delete-keychain "$SIGNING_KEYCHAIN"
           fi
           rm -f "$RUNNER_TEMP/walldance-certificate.p12"
+
+  release:
+    needs: notarize
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Prepare release notes and download notarized DMG
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          bash scripts/release-notes.sh "$version" > "$RUNNER_TEMP/release-notes.md"
+          gh run download "$GITHUB_RUN_ID" \
+            --name "Walldance-$version-universal" --dir dist
+          test -f "dist/Walldance-$version.dmg"
+
+      - name: Create or update draft release
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --draft --notes-file "$RUNNER_TEMP/release-notes.md"
+            gh release upload "$GITHUB_REF_NAME" "dist/Walldance-$version.dmg" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "dist/Walldance-$version.dmg" \
+              --draft --verify-tag --title "Walldance $GITHUB_REF_NAME" \
+              --notes-file "$RUNNER_TEMP/release-notes.md"
+          fi
