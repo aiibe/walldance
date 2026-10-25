@@ -44,6 +44,8 @@ Use concise imperative commit subjects, such as `Fix duplicate video imports`. D
 
 ## Documentation
 
+Keep `CHANGELOG.md` in sync as user-visible changes happen, including behavior changes, additions, and fixes. Update it as part of the work rather than waiting for a commit or release, and revise entries when the behavior changes again.
+
 Keep `README.md` and `CHANGELOG.md` concise and easy to read. The README should cover what the app does, requirements, installation, and basic use in plain language. Leave out implementation details, build commands, signing, notarization, and CI setup. Keep changelog entries to a few short bullets about user-visible changes per version; avoid technical details and development history. Update the changelog for user-visible releases. Use `## 1.2.3` version headings: tag releases create a draft with that section as the GitHub release description and attach the notarized DMG. Keep releases as drafts for user review unless explicitly asked to publish.
 
 ## Data Safety
