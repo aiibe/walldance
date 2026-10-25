@@ -4,7 +4,7 @@ A simple video wallpaper shelf for macOS. Drop a clip, preview it with a hover, 
 
 Requires **macOS 26 or later** and a Mac that supports HEVC Main 10 encoding.
 
-Open the Walldance DMG, drag **Walldance.app** to **Applications**, then eject the disk image.
+Download Walldance at [walldance.souk.dev](https://walldance.souk.dev). Open the DMG, drag **Walldance.app** to **Applications**, then eject the disk image.
 
 - Drop videos into the window, or add them with **+** / **⌘O**.
 - Wait for preparation to finish, then click a video to apply it as your wallpaper.
@@ -13,6 +13,8 @@ Open the Walldance DMG, drag **Walldance.app** to **Applications**, then eject t
 - Right-click a video to remove it. Removing the current wallpaper switches to another shelf video, or restores the previous wallpaper if the shelf is empty.
 
 Walldance keeps one prepared copy for both previews and wallpaper playback. Your original files stay untouched. Preview playback pauses when you switch to another app.
+
+The app checks for updates automatically. Use **Walldance → Check for Updates…** at any time, or change update preferences in **Settings**.
 
 Use SDR videos. On a fresh Mac, download one of Apple’s aerial wallpapers in System Settings → Wallpaper before adding your first clip.
 

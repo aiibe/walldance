@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: App version (for example, 0.1.0)
+        description: App version (for example, 0.1.1)
         required: true
-        default: '0.1.0'
+        default: '0.1.1'
         type: string
 
 permissions:
@@ -50,6 +50,15 @@ jobs:
 
       - name: Validate release notes
         run: bash scripts/release-notes.sh "$APP_VERSION" > /dev/null
+
+      - name: Validate update signing configuration
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$SPARKLE_PRIVATE_KEY" ]]; then
+            echo 'Missing repository secret: SPARKLE_PRIVATE_KEY' >&2
+            exit 1
+          fi
 
       - name: Run tests
         run: |
@@ -112,11 +121,18 @@ jobs:
       - name: Notarize and staple DMG
         run: zsh scripts/notarize-app.sh "dist/Walldance-$APP_VERSION.dmg"
 
-      - name: Upload notarized DMG
+      - name: Generate and verify signed update feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: zsh scripts/generate-appcast.sh "dist/Walldance-$APP_VERSION.dmg"
+
+      - name: Upload notarized DMG and update feed
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Walldance-${{ env.APP_VERSION }}-universal
-          path: dist/Walldance-${{ env.APP_VERSION }}.dmg
+          path: |
+            dist/Walldance-${{ env.APP_VERSION }}.dmg
+            dist/appcast.xml
           if-no-files-found: error
           compression-level: 0
 
@@ -161,17 +177,22 @@ jobs:
           gh run download "$GITHUB_RUN_ID" \
             --name "Walldance-$version-universal" --dir dist
           test -f "dist/Walldance-$version.dmg"
+          test -f dist/appcast.xml
 
       - name: Create or update draft release
         shell: bash
         run: |
           version="${GITHUB_REF_NAME#v}"
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            if [[ "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq '.isDraft')" != true ]]; then
+              echo 'Refusing to replace a published update. Create a new version tag instead.' >&2
+              exit 1
+            fi
             gh release edit "$GITHUB_REF_NAME" \
               --draft --notes-file "$RUNNER_TEMP/release-notes.md"
-            gh release upload "$GITHUB_REF_NAME" "dist/Walldance-$version.dmg" --clobber
+            gh release upload "$GITHUB_REF_NAME" "dist/Walldance-$version.dmg" dist/appcast.xml --clobber
           else
-            gh release create "$GITHUB_REF_NAME" "dist/Walldance-$version.dmg" \
+            gh release create "$GITHUB_REF_NAME" "dist/Walldance-$version.dmg" dist/appcast.xml \
               --draft --verify-tag --title "Walldance $GITHUB_REF_NAME" \
               --notes-file "$RUNNER_TEMP/release-notes.md"
           fi

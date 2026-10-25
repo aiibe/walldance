@@ -25,7 +25,13 @@ final class LibraryModel {
     private(set) var applyingID: UUID?
     private var activeImport: Task<Void, Never>?
     private var openPanel: NSOpenPanel?
+    private var removalCount = 0
     let repository: VideoLibrary
+
+    var canRestartForUpdate: Bool {
+        !isLoading && pendingVideos.isEmpty && checkingIDs.isEmpty
+            && applyingID == nil && removalCount == 0 && openPanel == nil
+    }
 
     init(applicationSupport support: URL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0],
          controlsWallpaperProcesses: Bool = true) {
@@ -139,7 +145,9 @@ final class LibraryModel {
     }
 
     func remove(_ video: LibraryVideo) {
+        removalCount += 1
         Task {
+            defer { removalCount -= 1 }
             do {
                 try await repository.remove(video)
                 if playingID == video.id { playingID = nil }

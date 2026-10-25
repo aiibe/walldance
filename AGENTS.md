@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Walldance is a native macOS video wallpaper shelf using SwiftUI and AVKit, with no external dependencies.
+Walldance is a native macOS video wallpaper shelf using SwiftUI and AVKit, with automatic app updates.
 
 - `Package.swift` defines the executable, core library, and test target.
 - `Sources/Walldance/` contains the app entry point, views, playback, and `LibraryModel`.
@@ -47,6 +47,17 @@ Use concise imperative commit subjects, such as `Fix duplicate video imports`. D
 Keep `CHANGELOG.md` in sync as user-visible changes happen, including behavior changes, additions, and fixes. Update it as part of the work rather than waiting for a commit or release, and revise entries when the behavior changes again.
 
 Keep `README.md` and `CHANGELOG.md` concise and easy to read. The README should cover what the app does, requirements, installation, and basic use in plain language. Leave out implementation details, build commands, signing, notarization, and CI setup. Keep changelog entries to a few short bullets about user-visible changes per version; avoid technical details and development history. Update the changelog for user-visible releases. Use `## 1.2.3` version headings: tag releases create a draft with that section as the GitHub release description and attach the notarized DMG. Keep releases as drafts for user review unless explicitly asked to publish.
+
+## Releases and Site Updates
+
+For every new version, remind the user that publishing the GitHub release and updating the static site are separate steps:
+
+1. Update `CHANGELOG.md`, commit, and push a version tag such as `v0.1.2`.
+2. CI creates a draft GitHub release with the notarized DMG and signed `appcast.xml`. Keep it as a draft for review unless explicitly asked to publish.
+3. After the release is published, run `python3 scripts/update-release.py v0.1.2` in `../walldance-site`, using the actual release tag.
+4. Review, commit, push, and redeploy the static site to `https://walldance.souk.dev`.
+
+The site hosts the landing page and update feed; DMGs download from GitHub Releases. Installed apps discover the new version only after the site's feed is updated and deployed. Keep signed feed bytes unchanged and retain published DMGs for clients with older feeds. See `docs/updates.md` for signing and verification details.
 
 ## Data Safety
 
