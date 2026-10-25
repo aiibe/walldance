@@ -12,6 +12,8 @@ Walldance is a native macOS video shelf using SwiftUI and AVKit, with no externa
 
 Keep UI behavior in the app target and storage logic in the core. `Assets/` contains the icon master; `Sources/Walldance/Resources/` contains the runtime app icon. UI icons use SF Symbols. Generated `.build/`, `.swiftpm/`, and `dist/` files are ignored.
 
+The installer shows only Walldance and the Applications shortcut. Keep the artwork in `scripts/InstallerBackground.swift` aligned with `scripts/layout-dmg.applescript`; keep the changelog in the release description.
+
 ## Build, Test, and Development Commands
 
 Use macOS with Swift 6 and an SDK supporting the macOS 26 APIs referenced by the UI. The deployment target is macOS 14; preserve availability guards and fallbacks.

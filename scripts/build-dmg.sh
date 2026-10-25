@@ -23,18 +23,32 @@ codesign --verify --deep --strict --verbose=2 "$APP"
 
 DMG="dist/Walldance-$VERSION.dmg"
 STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/walldance-dmg.XXXXXX")"
-trap 'rm -rf "$STAGING_DIR"' EXIT
-mkdir "$STAGING_DIR/payload"
+MOUNT_POINT="$STAGING_DIR/mount"
+MOUNTED=0
+cleanup() {
+    if [[ "$MOUNTED" == 1 ]]; then
+        hdiutil detach "$MOUNT_POINT" -force || return
+    fi
+    rm -rf "$STAGING_DIR"
+}
+trap cleanup EXIT
+mkdir -p "$STAGING_DIR/payload/.background"
 ditto "$APP" "$STAGING_DIR/payload/Walldance.app"
 ln -s /Applications "$STAGING_DIR/payload/Applications"
-cp CHANGELOG.md "$STAGING_DIR/payload/CHANGELOG.md"
-cat > "$STAGING_DIR/payload/Install.txt" <<'TEXT'
-Drag Walldance.app to Applications, then eject this disk image.
-Open Walldance from Applications. Requires macOS 14 or later.
-TEXT
+swift scripts/InstallerBackground.swift "$STAGING_DIR/payload/.background/installer.png"
 
 hdiutil create -volname "Walldance $VERSION" -srcfolder "$STAGING_DIR/payload" \
-    -format UDZO -ov "$STAGING_DIR/Walldance.dmg"
+    -fs HFS+ -format UDRW "$STAGING_DIR/layout.dmg"
+hdiutil attach "$STAGING_DIR/layout.dmg" -nobrowse -noverify -mountpoint "$MOUNT_POINT"
+MOUNTED=1
+osascript scripts/layout-dmg.applescript "$MOUNT_POINT"
+if [[ ! -f "$MOUNT_POINT/.DS_Store" ]]; then
+    echo "Finder did not save the installer layout" >&2
+    exit 1
+fi
+hdiutil detach "$MOUNT_POINT"
+MOUNTED=0
+hdiutil convert "$STAGING_DIR/layout.dmg" -format UDZO -o "$STAGING_DIR/Walldance.dmg"
 if [[ "${SIGNING_IDENTITY:--}" != - ]]; then
     sign_args=(--sign "$SIGNING_IDENTITY" --timestamp)
     if [[ -n "${SIGNING_KEYCHAIN:-}" ]]; then
